@@ -23,7 +23,6 @@ lvim.keys.visual_mode["//"] = ":CommentToggle<CR>"
 lvim.keys.normal_mode["p"] = "p=`]"
 lvim.keys.normal_mode["<C-_>"] = ":nohl<CR>"
 
-
 -- Change Telescope navigation to use j and k for navigation and n and p for history in both input and normal mode.
 lvim.builtin.telescope.on_config_done = function()
   -- local actions = require "telescope.actions"
@@ -73,6 +72,21 @@ lvim.builtin.treesitter.highlight.enabled = true
 --   --Enable completion triggered by <c-x><c-o>
 --   buf_set_option("omnifunc", "v:lua.vim.lsp.omnifunc")
 -- end
+lvim.lsp.on_attach_callback = function(client, bufnr)
+  vim.lsp.handlers["textDocument/publishDiagnostics"] = vim.lsp.with(
+    vim.lsp.diagnostic.on_publish_diagnostics, {
+      signs = {
+        severity_limit = 'Warning',
+      },
+      underline = false,
+      update_in_insert = false,
+      virtual_text = {
+        spacing = 2,
+        severity_limit = 'Warning',
+      },
+    }
+  )
+end
 -- you can overwrite the null_ls setup table (useful for setting the root_dir function)
 -- lvim.lsp.null_ls.setup = {
 --   root_dir = require("lspconfig").util.root_pattern("Makefile", ".git", "node_modules"),
@@ -177,6 +191,41 @@ lvim.plugins = {
     },
     ft = {"fugitive"}
   },
+  {
+    "sunjon/shade.nvim",
+    config = function()
+      require'shade'.setup({
+        overlay_opacity = 20,
+        opacity_step = 1,
+        -- keys = {
+        --   brightness_up    = '<C-Up>',
+        --   brightness_down  = '<C-Down>',
+        --   toggle           = '<Leader>s',
+        -- }
+      })
+    end,
+  },
+  { "p00f/nvim-ts-rainbow", },
+  { "camspiers/animate.vim" },
+  { 
+    "camspiers/lens.vim",
+    config = function()
+      vim.cmd ("let g:lens#width_resize_max = 160")
+      vim.cmd("let g:lens#width_resize_min = 60") 
+    end,
+  },
+  {
+    "lukas-reineke/indent-blankline.nvim",
+    event = "BufRead",
+    setup = function()
+      vim.g.indentLine_enabled = 1
+      vim.g.indent_blankline_char = "│"
+      vim.g.indent_blankline_filetype_exclude = {"help", "terminal", "dashboard"}
+      vim.g.indent_blankline_buftype_exclude = {"terminal"}
+      vim.g.indent_blankline_show_trailing_blankline_indent = false
+      vim.g.indent_blankline_show_first_indent_level = false
+    end
+  },
 }
 
 -- Autocommands (https://neovim.io/doc/user/autocmd.html)
@@ -184,15 +233,20 @@ lvim.plugins = {
 --   { "BufWinEnter", "*.lua", "setlocal ts=8 sw=8" },
 -- }
 
+lvim.autocommands.custom_groups = {
+  -- On hovering a line, show diagnostics
+  {"CursorHold", "*", ":lua vim.diagnostic.show_line_diagnostics()"},
+}
+
+
 vim.opt.autowrite = true
 vim.opt.autoread= true
 vim.opt.backup = false -- creates a backup file
 -- vim.opt.clipboard = "unnamedplus" -- allows neovim to access the system clipboard
 vim.opt.clipboard = "unnamed"
 vim.opt.cmdheight = 2 -- more space in the neovim command line for displaying messages
-vim.opt.colorcolumn = "99999" -- fixes indentline for now
+-- vim.opt.colorcolumn = "99999" -- fixes indentline for now
 vim.opt.completeopt = { "menuone", "noselect" }
-vim.opt.conceallevel = 0 -- so that `` is visible in markdown files
 vim.opt.fileencoding = "utf-8" -- the encoding written to a file
 vim.opt.foldmethod = "manual" -- folding set to "expr" for treesitter based folding
 vim.opt.foldexpr = "" -- set to "nvim_treesitter#foldexpr()" for treesitter based folding
@@ -212,7 +266,7 @@ vim.opt.swapfile = false -- creates a swapfile
 vim.opt.termguicolors = true -- set term gui colors (most terminals support this)
 vim.opt.timeoutlen = 100 -- time to wait for a mapped sequence to complete (in milliseconds)
 vim.opt.title = true -- set the title of window to the value of the titlestring
-vim.opt.titlestring = "%<%F%=%l/%L - nvim" -- what the title of the window will be set to
+vim.opt.titlestring = "%{split(getcwd(), '/')[-1]}" -- what the title of the window will be set to
 vim.opt.undodir = "~/.config/lvim/undo" -- set an undo directory
 -- vim.opt.undofile = true -- enable persistent undo
 vim.opt.updatetime = 300 -- faster completion
@@ -222,8 +276,8 @@ vim.opt.shiftwidth = 2 -- the number of spaces inserted for each indentation
 vim.opt.tabstop = 2 -- insert 2 spaces for a tab
 vim.opt.cursorline = true -- highlight the current line
 vim.opt.number = true -- set numbered lines
-vim.opt.relativenumber = false -- set relative numbered lines
-vim.opt.numberwidth = 4 -- set number column width to 2 {default 4}
+vim.opt.relativenumber = true -- set relative numbered lines
+vim.opt.numberwidth = 2 -- set number column width to 2 {default 4}
 vim.opt.signcolumn = "yes" -- always show the sign column otherwise it would shift the text each time
 vim.opt.wrap = false -- display lines as one long line
 vim.opt.spell = false
@@ -233,4 +287,5 @@ vim.opt.sidescrolloff = 8
 vim.opt.termguicolors = true
 vim.opt.syntax = "on"
 vim.opt.hidden = true
+vim.opt.background = "dark"
 
